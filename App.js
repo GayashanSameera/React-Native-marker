@@ -11,13 +11,13 @@ export default function App() {
   const [pins, setPins] = useState([]);
   const [activePin, setActivePin] = useState({});
   const [activeNewDraggable, setActiveNewDraggable] = useState(true);
+  const [activeEditDraggable, setActiveEditDraggable] = useState(false);
+  const [currentDraggerPosition, setCurrentDraggerPosition] = useState({x: 50, y: 50});
 
   useEffect(() => {
     if (anchorRef?.current) {
       anchorRef.current.measureInWindow((x, y, width, height) => {
         setYvalue(y);
-        console.log('x',x);
-        console.log('y',y);
         setXvalue(x)
       });
     }
@@ -25,11 +25,8 @@ export default function App() {
 
   const savePin = () => {
     setActiveNewDraggable(false);
-    const preArray = [...pins];
-    preArray.push(activePin);
-    setPins(preArray);
     setDropPin(false);
-
+    setActivePin({});
     setTimeout(() => {
       setActiveNewDraggable(true);
     }, 100);
@@ -39,16 +36,66 @@ export default function App() {
   const releaseDrag = (event) => {
     if (newDragRef?.current) {
       newDragRef.current.measureInWindow((x, y, width, height) => {
-        console.log('x>>>',x);
-        console.log('xvalue',xvalue);
-        console.log('y>>>',y);
-        console.log('yvalue',yvalue);
-        setActivePin({x : x - (xvalue) , y : y - (yvalue)});
+        setActiveNewDraggable(false);
+        setActiveEditDraggable(false);
+        const preArray = [...pins];
+        const id = activePin?.id ||( (preArray?.length || 0 ) + 1);
+        preArray.push({x : x - (xvalue) , y : y - (yvalue), id});
+        setPins(preArray);
+        setActivePin({x : x - (xvalue) , y : y - (yvalue) , id});
         setDropPin(true);
+        
       });
     }
   }
-console.log('pins',pins);
+
+  const onPressSavedPin = (item) => {
+    setActiveEditDraggable(true);
+    const copiedPins = [...pins];
+    const newSavedPins = copiedPins.filter(i => i.id !== item.id);
+    setPins([...newSavedPins]);
+    setActivePin(item);
+    setCurrentDraggerPosition({x : item.x , y : item.y });
+  }
+
+  const up = () => {
+    const copiedPins = [...pins];
+    activePin.y = activePin.y - 8;
+
+    const activeIndex = copiedPins.findIndex(i => i.id === activePin.id);
+    copiedPins[activeIndex] = activePin;
+    setPins(copiedPins);
+
+  }
+
+  const down = () => {
+    const copiedPins = [...pins];
+    activePin.y = activePin.y + 8;
+
+    const activeIndex = copiedPins.findIndex(i => i.id === activePin.id);
+    copiedPins[activeIndex] = activePin;
+    setPins(copiedPins);
+  }
+
+  const left = () => {
+    const copiedPins = [...pins];
+    activePin.x = activePin.x - 8;
+
+    const activeIndex = copiedPins.findIndex(i => i.id === activePin.id);
+    copiedPins[activeIndex] = activePin;
+    setPins(copiedPins);
+  }
+
+  const right = () => {
+    
+    const copiedPins = [...pins];
+    activePin.x = activePin.x + 8;
+
+    const activeIndex = copiedPins.findIndex(i => i.id === activePin.id);
+    copiedPins[activeIndex] = activePin;
+    setPins(copiedPins);
+  }
+  
   return (
     <View style={styles.container}>
       <View style={styles.imageWrapper} ref={anchorRef}>
@@ -59,28 +106,37 @@ console.log('pins',pins);
        {/* <View style={[styles.surveyTablePopUp, { top: 230 , left: 220}]} /> */}
        {/* 600 600 */}
        {/* <View style={[styles.surveyTablePopUp, { top: 280 , left: 270}]} /> */}
-       {/* <Draggable 
-            x={200} y={300} renderColor='red' renderText='B'
-            renderSize={80} 
-            onDragRelease={releaseDrag}
-            onLongPress={()=>console.log('long press')}
-            onShortPressRelease={()=>console.log('press drag')}
-            onPressIn={()=>console.log('in press')}
-            onPressOut={()=>console.log('out press')}
-        />   */}
+      
 
         {
           pins?.length > 0 ? 
           (
             pins.map(i => (
-                  <View style={[ styles.pinWrapper, styles.surveyTablePopUp, { top: i.y , left: i.x}]} >
+              
+                  <TouchableOpacity 
+                    onPress={() => onPressSavedPin(i)} 
+                    style={[ styles.pinWrapper, styles.surveyTablePopUp, { top: i.y , left: i.x}]} 
+                    onLongPress={() => onPressSavedPin(i)}
+                  >
                       <View style= {[styles.pinTop]}/>  
                       <View style= {[styles.pinBottom]}/>
-                  </View>
+                  </TouchableOpacity>
+              
             ))
           ):
           null
         }
+
+      {
+        activeEditDraggable && (
+          <Draggable x={currentDraggerPosition.x} y={currentDraggerPosition.y} onDragRelease={releaseDrag}>
+            <View style= {[styles.pinWrapper]} ref={newDragRef}>
+                <View style= {[styles.pinTop]}></View> 
+                <View style= {[styles.pinBottom]}></View> 
+            </View> 
+          </Draggable>
+        )
+      }
         
      </View>
      <View>
@@ -99,12 +155,18 @@ console.log('pins',pins);
      <View>
         {
           dropPin && (
-            <TouchableOpacity onPress={savePin}><Text>SAVE</Text></TouchableOpacity>
+            <View>
+                <TouchableOpacity onPress={savePin}><Text>SAVE</Text></TouchableOpacity>
+                <TouchableOpacity onPress={up}><Text>UP</Text></TouchableOpacity>
+                <TouchableOpacity onPress={down}><Text>DOWN</Text></TouchableOpacity>
+                <TouchableOpacity onPress={left}><Text>LEFT</Text></TouchableOpacity>
+                <TouchableOpacity onPress={right}><Text>RIGHT</Text></TouchableOpacity>
+            </View>
           )
         }
      </View>
         
-     </View>
+    </View>
   );
 }
 
