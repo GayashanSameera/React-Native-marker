@@ -1,28 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
-import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity } from "react-native";
 import Draggable from "react-native-draggable";
-import cloneDeep from "lodash.clonedeep";
 
-export function Pin(props) {
+export function Pin() {
     return (
         <>
-            {props.dragging ? (
-                <ImageBackground
-                    source={require("./vector.png")}
-                    resizeMode="cover"
-                    style={[{ width: 35, height: 35, alignItems: "center" }]}
-                >
-                    <View style={[{ paddingTop: 10, width: 35, height: 35, alignItems: "center" }]}>
-                        <View style={[styles.pinTop]}></View>
-                        <View style={[styles.pinBottom]}></View>
-                    </View>
-                </ImageBackground>
-            ) : (
-                <View style={[{ paddingTop: 10, width: 35, height: 35, alignItems: "center" }]}>
-                    <View style={[styles.pinTop]}></View>
-                    <View style={[styles.pinBottom]}></View>
-                </View>
-            )}
+            <View style={[styles.pinTop]}></View>
+            <View style={[styles.pinBottom]}></View>
         </>
     );
 }
@@ -30,30 +14,26 @@ export function Pin(props) {
 export default function App() {
     const anchorRef = useRef(null);
     const newDragRef = useRef(null);
-    const editDragRef = useRef(null);
-
+    const [yvalue, setYvalue] = useState(null);
     const [dropPin, setDropPin] = useState(false);
-    const [wrapperYValue, setWrapperYValue] = useState(null);
-    const [wrapperXValue, setWrapperXValue] = useState(null);
+    const [xvalue, setXvalue] = useState(null);
     const [pins, setPins] = useState([]);
     const [activePin, setActivePin] = useState({});
     const [activeNewDraggable, setActiveNewDraggable] = useState(true);
     const [activeEditDraggable, setActiveEditDraggable] = useState(false);
     const [currentDraggerPosition, setCurrentDraggerPosition] = useState({ x: 50, y: 50 });
-    const [activeNewDraggableId, setActiveNewDraggableId] = useState(null);
 
     useEffect(() => {
         if (anchorRef?.current) {
             anchorRef.current.measureInWindow((x, y, width, height) => {
-                setWrapperYValue(y);
-                setWrapperXValue(x);
+                setYvalue(y);
+                setXvalue(x);
             });
         }
     });
 
     const savePin = () => {
         setActiveNewDraggable(false);
-        setActiveNewDraggableId(null);
         setDropPin(false);
         setActivePin({});
         setTimeout(() => {
@@ -66,13 +46,11 @@ export default function App() {
             newDragRef.current.measureInWindow((x, y, width, height) => {
                 setActiveNewDraggable(false);
                 setActiveEditDraggable(false);
-                setActiveNewDraggableId(null);
-                
-                const preArray = cloneDeep(pins);
+                const preArray = [...pins];
                 const id = activePin?.id || (preArray?.length || 0) + 1;
-                preArray.push({ x: x - wrapperXValue, y: y - wrapperYValue, id });
+                preArray.push({ x: x - xvalue, y: y - yvalue, id });
                 setPins(preArray);
-                setActivePin({ x: x - wrapperXValue, y: y - wrapperYValue, id });
+                setActivePin({ x: x - xvalue, y: y - yvalue, id });
                 setDropPin(true);
             });
         }
@@ -80,10 +58,7 @@ export default function App() {
 
     const onPressSavedPin = (item) => {
         setActiveEditDraggable(true);
-        setActiveNewDraggable(false);
-        setDropPin(true);
-        setActiveNewDraggableId(item.id);
-        const copiedPins = cloneDeep(pins);
+        const copiedPins = [...pins];
         const newSavedPins = copiedPins.filter((i) => i.id !== item.id);
         setPins([...newSavedPins]);
         setActivePin(item);
@@ -91,47 +66,39 @@ export default function App() {
     };
 
     const up = () => {
-        const copiedPins = cloneDeep(pins);
+        const copiedPins = [...pins];
         activePin.y = activePin.y - 8;
 
         const activeIndex = copiedPins.findIndex((i) => i.id === activePin.id);
         copiedPins[activeIndex] = activePin;
         setPins(copiedPins);
-        setCurrentDraggerPosition({ x: activePin.x, y: activePin.y });
     };
 
     const down = () => {
-        const copiedPins = cloneDeep(pins);
+        const copiedPins = [...pins];
         activePin.y = activePin.y + 8;
 
         const activeIndex = copiedPins.findIndex((i) => i.id === activePin.id);
         copiedPins[activeIndex] = activePin;
         setPins(copiedPins);
-        setCurrentDraggerPosition({ x: activePin.x, y: activePin.y });
     };
 
     const left = () => {
-        const copiedPins = cloneDeep(pins);
+        const copiedPins = [...pins];
         activePin.x = activePin.x - 8;
 
         const activeIndex = copiedPins.findIndex((i) => i.id === activePin.id);
         copiedPins[activeIndex] = activePin;
         setPins(copiedPins);
-        setCurrentDraggerPosition({ x: activePin.x, y: activePin.y });
     };
 
     const right = () => {
-        const copiedPins = cloneDeep(pins);
+        const copiedPins = [...pins];
         activePin.x = activePin.x + 8;
 
         const activeIndex = copiedPins.findIndex((i) => i.id === activePin.id);
         copiedPins[activeIndex] = activePin;
         setPins(copiedPins);
-        setCurrentDraggerPosition({ x: activePin.x, y: activePin.y });
-    };
-
-    const dragStart = (id) => {
-        setActiveNewDraggableId(id);
     };
 
     return (
@@ -146,13 +113,11 @@ export default function App() {
                 {/* <View style={[styles.surveyTablePopUp, { top: 280 , left: 270}]} /> */}
 
                 {pins?.length > 0
-                    ? pins.map((i,index) => (
+                    ? pins.map((i) => (
                           <TouchableOpacity
-                            key={index}
                               onPress={() => onPressSavedPin(i)}
                               style={[styles.pinWrapper, styles.surveyTablePopUp, { top: i.y, left: i.x }]}
                               onLongPress={() => onPressSavedPin(i)}
-                              onPressOut={() => onPressSavedPin(i)}
                           >
                               <Pin />
                           </TouchableOpacity>
@@ -161,17 +126,17 @@ export default function App() {
 
                 {activeEditDraggable && (
                     <Draggable x={currentDraggerPosition.x} y={currentDraggerPosition.y} onDragRelease={releaseDrag}>
-                        <View style={[styles.pinWrapper]} ref={newDragRef} >
-                            <Pin dragging={activeNewDraggableId > 0 } />
+                        <View style={[styles.pinWrapper]} ref={newDragRef}>
+                            <Pin />
                         </View>
                     </Draggable>
                 )}
             </View>
             <View>
                 {activeNewDraggable && (
-                    <Draggable x={50} y={50} onDragRelease={releaseDrag} onDrag={() => dragStart(-1)}>
+                    <Draggable x={50} y={50} onDragRelease={releaseDrag}>
                         <View style={[styles.pinWrapper]} ref={newDragRef}>
-                            <Pin dragging={activeNewDraggableId === -1} />
+                            <Pin />
                         </View>
                     </Draggable>
                 )}
