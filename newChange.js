@@ -27,7 +27,7 @@ export function Pin(props) {
     );
 }
 
-export default function App() {
+export default function NewChange() {
     const anchorRef = useRef(null);
     const newDragRef = useRef(null);
     
@@ -36,7 +36,6 @@ export default function App() {
     const [wrapperYValue, setWrapperYValue] = useState(null);
     const [wrapperXValue, setWrapperXValue] = useState(null);
     const [pins, setPins] = useState([]);
-    const [tempPins, setTempPins] = useState([]);
     const [activePin, setActivePin] = useState({});
     const [activeNewDraggable, setActiveNewDraggable] = useState(true);
     const [activeNewDraggableId, setActiveNewDraggableId] = useState(null);
@@ -57,7 +56,7 @@ export default function App() {
     const savePin = () => {
         console.log('pins',pins);
         const preArray = cloneDeep(pins);
-        setTempPins(preArray);
+        
         setActiveNewDraggable(false);
         setDropPin(false);
         setActivePin({});
@@ -74,7 +73,6 @@ export default function App() {
                 const newActiveDrag = { x: x - wrapperXValue, y: y - wrapperYValue, id };
                 preArray.push(newActiveDrag);
 
-                setTempPins(cloneDeep(preArray));
                 setPins(cloneDeep(preArray));
                 setActiveNewDraggableId(null);
                 setActiveNewDraggable(false);
@@ -84,21 +82,32 @@ export default function App() {
         }
     };
 
-    const releaseEditDrag = (item, index) => {
-        console.log('editDragRef',editDragRef);
-        if (editDragRef?.[index]?.current) {
-            editDragRef?.[index].current.measureInWindow((x, y, width, height) => {
-                const preArray = cloneDeep(pins);
-                preArray[index].x = x - wrapperXValue+20;
-                preArray[index].y = y - wrapperYValue+20;
-                
-                setActiveNewDraggableId(null);
-                setActiveNewDraggable(false);
-                setPins(preArray);
-                setActivePin({ x: x - wrapperXValue, y: y - wrapperYValue, id: preArray[index].id });
-                setDropPin(true);
-            });
+    const releaseEditDrag = (item, index, changing) => {
+        // console.log('editDragRef',editDragRef);
+        const preArrayy = cloneDeep(pins);
+        preArrayy[index] = {
+            ...preArrayy?.[index],
+            x: preArrayy?.[index]?.x + changing?.dx,
+            y: preArrayy?.[index]?.y + changing?.dy,
         }
+        console.log('x',preArrayy?.[index]?.x + changing?.dx);
+        console.log('Y',preArrayy?.[index]?.y + changing?.dy);
+        setPins(preArrayy);
+        
+        // if (editDragRef?.[index]?.current) {
+        //     editDragRef?.[index].current.measureInWindow((x, y, width, height) => {
+        //         const preArray = cloneDeep(pins);
+        //         preArray[index].x = x - wrapperXValue;
+        //         preArray[index].y = y - wrapperYValue;
+        //         console.log('preArray[index].x',preArray[index].x);
+        //         console.log('preArray?.[index]?.y ',preArray?.[index]?.y );
+        //         setActiveNewDraggableId(null);
+        //         setActiveNewDraggable(false);
+        //         setPins(preArray);
+        //         setActivePin({ x: x - wrapperXValue, y: y - wrapperYValue, id: preArray[index].id });
+        //         setDropPin(true);
+        //     });
+        // }
     };
 
     const up = () => {
@@ -148,8 +157,6 @@ export default function App() {
     const dragStart = (id) => {
         setActiveNewDraggableId(id);
     };
-console.log('activeNewDraggableId',activeNewDraggableId);
-console.log('tempPins',tempPins);
     return (
         <View style={styles.container}>
             <View style={styles.imageWrapper} ref={anchorRef}>
@@ -161,14 +168,14 @@ console.log('tempPins',tempPins);
                 {/* 600 600 */}
                 {/* <View style={[styles.surveyTablePopUp, { top: 280 , left: 270}]} /> */}
 
-                {tempPins?.length > 0
-                    ? tempPins.map((i, index) => (
+                {pins?.length > 0
+                    ? pins.map((i, index) => (
                           <Draggable
                             key={index}
                               x={i.x}
                               y={i.y}
-                              onPressIn={() => dragStart(i.id)}
-                              onDragRelease={() => releaseEditDrag(i, index)}
+                              onDrag={(event, changing) => dragStart(i.id)}
+                              onDragRelease={(event, changing) => releaseEditDrag(i, index, changing)}
                           >
                               <View style={[styles.pinWrapper]} ref={editDragRef[index]}>
                                   <Pin dragging={activeNewDraggableId === i.id} />
@@ -179,7 +186,7 @@ console.log('tempPins',tempPins);
             </View>
             <View>
                 {activeNewDraggable && (
-                    <Draggable x={50} y={50} onDragRelease={releaseDrag} onPressIn={() => dragStart(-1)}>
+                    <Draggable x={50} y={50} onDragRelease={releaseDrag} onDrag={() => dragStart(-1)}>
                         <View style={[styles.pinWrapper]} ref={newDragRef}>
                             <Pin dragging={activeNewDraggableId === -1} />
                         </View>

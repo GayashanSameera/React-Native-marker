@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground } from "react-native";
+import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground, ScrollView } from "react-native";
 import Draggable from "react-native-draggable";
 import cloneDeep from "lodash.clonedeep";
 
@@ -27,7 +27,7 @@ export function Pin(props) {
     );
 }
 
-export default function App() {
+export default function WorkingOld() {
     const anchorRef = useRef(null);
     const newDragRef = useRef(null);
     const editDragRef = useRef(null);
@@ -61,9 +61,10 @@ export default function App() {
         }, 100);
     };
 
-    const releaseDrag = (event) => {
-        if (newDragRef?.current) {
-            newDragRef.current.measureInWindow((x, y, width, height) => {
+    const releaseDrag = (action) => {
+        const reference = action === 'edit' ? editDragRef : newDragRef;
+        if (reference?.current) {
+            reference.current.measureInWindow((x, y, width, height) => {
                 setActiveNewDraggable(false);
                 setActiveEditDraggable(false);
                 setActiveNewDraggableId(null);
@@ -130,12 +131,24 @@ export default function App() {
         setCurrentDraggerPosition({ x: activePin.x, y: activePin.y });
     };
 
+    const deleteItem = () => {
+        const copiedPins = cloneDeep(pins);
+        const newPins = copiedPins.filter((i) => i.id !== activePin.id);
+        
+        setPins(newPins);
+        setActiveNewDraggable(true);
+        setActiveNewDraggableId(null);
+        setDropPin(false);
+        setActivePin({});
+        setActiveEditDraggable(false);
+    }
+
     const dragStart = (id) => {
         setActiveNewDraggableId(id);
     };
 
     return (
-        <View style={styles.container}>
+            <View style={styles.container}>
             <View style={styles.imageWrapper} ref={anchorRef}>
                 <Image source={require("./Screenshot.png")} style={styles.imageStyles} />
                 {/* 400 400 */}
@@ -160,16 +173,16 @@ export default function App() {
                     : null}
 
                 {activeEditDraggable && (
-                    <Draggable x={currentDraggerPosition.x} y={currentDraggerPosition.y} onDragRelease={releaseDrag}>
+                    <Draggable x={currentDraggerPosition.x} y={currentDraggerPosition.y} onDragRelease={() => releaseDrag('edit')}>
                         <View style={[styles.pinWrapper]} ref={newDragRef} >
                             <Pin dragging={activeNewDraggableId > 0 } />
                         </View>
                     </Draggable>
                 )}
             </View>
-            <View>
+            <View style={[ activeNewDraggable && styles.initialWrapper]} >
                 {activeNewDraggable && (
-                    <Draggable x={50} y={50} onDragRelease={releaseDrag} onDrag={() => dragStart(-1)}>
+                    <Draggable x={20} y={0} onDragRelease={releaseDrag} onDrag={() => dragStart(-1)}>
                         <View style={[styles.pinWrapper]} ref={newDragRef}>
                             <Pin dragging={activeNewDraggableId === -1} />
                         </View>
@@ -179,39 +192,55 @@ export default function App() {
             <View>
                 {dropPin && (
                     <View>
-                        <TouchableOpacity onPress={savePin}>
+                        <TouchableOpacity onPress={savePin} style={styles.buttonWrapper}>
                             <Text>SAVE</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={up}>
+                        <TouchableOpacity onPress={deleteItem} style={styles.buttonWrapper}>
+                            <Text>DELETE</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={up} style={styles.buttonWrapper}>
                             <Text>UP</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={down}>
+                        <TouchableOpacity onPress={down} style={styles.buttonWrapper}>
                             <Text>DOWN</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={left}>
+                        <TouchableOpacity onPress={left} style={styles.buttonWrapper}>
                             <Text>LEFT</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={right}>
+                        <TouchableOpacity onPress={right} style={styles.buttonWrapper}>
                             <Text>RIGHT</Text>
                         </TouchableOpacity>
+                        
                     </View>
                 )}
             </View>
-        </View>
+            </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        margin: 200,
+        margin: 100,
         backgroundColor: "#fff",
         alignItems: "center",
         justifyContent: "center",
+        height: 850,
     },
     imageWrapper: {
-        borderColor: "#eb4034",
+        borderColor: "#0a0a0a",
         borderWidth: 2,
+        width: 650,
+        height: 650,
+    },
+    buttonWrapper: {
+        borderColor: "#0a0a0a",
+        borderWidth: 2,
+        marginTop: 10,
+        borderRadius: 10,
+        width: 100,
+        alignItems: "center",
+        justifyContent: "center",
     },
     pinTop: {
         backgroundColor: "#eb4034",
@@ -268,4 +297,13 @@ const styles = StyleSheet.create({
         height: 100,
         backgroundColor: "green",
     },
+    initialWrapper : {
+        height: 60,
+        width: 60,
+        borderColor: "#0a0a0a",
+        borderWidth: 5,
+        borderRadius: 100,
+        top: 80,
+        left: 30
+    }
 });
