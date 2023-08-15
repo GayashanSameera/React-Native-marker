@@ -2,6 +2,8 @@ import React, { useRef, useEffect, useState, createRef } from "react";
 import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground } from "react-native";
 import Draggable from "react-native-draggable";
 import cloneDeep from "lodash.clonedeep";
+import RadialGradient from 'react-native-radial-gradient';
+
 
 export function Pin(props) {
     return (
@@ -18,10 +20,23 @@ export function Pin(props) {
                     </View>
                 </ImageBackground>
             ) : (
+
                 <View style={[{ paddingTop: 10, width: 35, height: 35, alignItems: "center" }]}>
                     <View style={[styles.pinTop]}></View>
                     <View style={[styles.pinBottom]}></View>
+                    {
+                        props.shadow ? (
+                            <RadialGradient 
+                                style={{width:50,height:50, top: -20, opacity: 0.5}}
+                                colors={['#eb4034','transparent']}
+                                stops={[0.01]}
+                                >
+                            </RadialGradient>
+                        ): null
+                    }
+                    
                 </View>
+                
             )}
         </>
     );

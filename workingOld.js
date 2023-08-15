@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { StyleSheet, Text, View, Image, TouchableOpacity, ImageBackground, ScrollView } from "react-native";
 import Draggable from "react-native-draggable";
 import cloneDeep from "lodash.clonedeep";
+import RadialGradient from 'react-native-radial-gradient';
 
 export function Pin(props) {
     return (
@@ -15,12 +16,28 @@ export function Pin(props) {
                     <View style={[{ paddingTop: 10, width: 35, height: 35, alignItems: "center" }]}>
                         <View style={[styles.pinTop]}></View>
                         <View style={[styles.pinBottom]}></View>
+                        <RadialGradient 
+                                style={{width:50,height:50, top: -20, opacity: 0.5}}
+                                colors={['#eb4034','transparent']}
+                                stops={[0.01]}
+                                >
+                            </RadialGradient>
                     </View>
                 </ImageBackground>
             ) : (
                 <View style={[{ paddingTop: 10, width: 35, height: 35, alignItems: "center" }]}>
                     <View style={[styles.pinTop]}></View>
                     <View style={[styles.pinBottom]}></View>
+                    {
+                        props.shadow ? (
+                            <RadialGradient 
+                                style={{width:50,height:50, top: -20, opacity: 0.5}}
+                                colors={['#eb4034','transparent']}
+                                stops={[0.01]}
+                                >
+                            </RadialGradient>
+                        ): null
+                    }
                 </View>
             )}
         </>
@@ -80,10 +97,11 @@ export default function WorkingOld() {
     };
 
     const onPressSavedPin = (item) => {
+        setActiveNewDraggableId(item.id);
         setActiveEditDraggable(true);
         setActiveNewDraggable(false);
         setDropPin(true);
-        setActiveNewDraggableId(item.id);
+        
         const copiedPins = cloneDeep(pins);
         const newSavedPins = copiedPins.filter((i) => i.id !== item.id);
         setPins([...newSavedPins]);
@@ -150,7 +168,7 @@ export default function WorkingOld() {
     return (
             <View style={styles.container}>
             <View style={styles.imageWrapper} ref={anchorRef}>
-                <Image source={require("./Screenshot.png")} style={styles.imageStyles} />
+                <Image source={require("./600x600.jpg")} style={styles.imageStyles} />
                 {/* 400 400 */}
                 {/* <View style={[styles.surveyTablePopUp, { top: 180 , left: 170}]} /> */}
                 {/* 500 500 */}
@@ -167,15 +185,15 @@ export default function WorkingOld() {
                               onLongPress={() => onPressSavedPin(i)}
                               onPressOut={() => onPressSavedPin(i)}
                           >
-                              <Pin />
+                              <Pin shadow = {true} />
                           </TouchableOpacity>
                       ))
                     : null}
 
                 {activeEditDraggable && (
                     <Draggable x={currentDraggerPosition.x} y={currentDraggerPosition.y} onDragRelease={() => releaseDrag('edit')}>
-                        <View style={[styles.pinWrapper]} ref={newDragRef} >
-                            <Pin dragging={activeNewDraggableId > 0 } />
+                        <View style={[styles.pinWrapper]} ref={editDragRef} >
+                            <Pin dragging={activeNewDraggableId > 0 } shadow = {false} />
                         </View>
                     </Draggable>
                 )}
@@ -184,7 +202,7 @@ export default function WorkingOld() {
                 {activeNewDraggable && (
                     <Draggable x={20} y={0} onDragRelease={releaseDrag} onDrag={() => dragStart(-1)}>
                         <View style={[styles.pinWrapper]} ref={newDragRef}>
-                            <Pin dragging={activeNewDraggableId === -1} />
+                            <Pin dragging={activeNewDraggableId === -1} shadow = {false} />
                         </View>
                     </Draggable>
                 )}
@@ -221,17 +239,17 @@ export default function WorkingOld() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        margin: 100,
+        // margin: 100,
         backgroundColor: "#fff",
         alignItems: "center",
         justifyContent: "center",
-        height: 850,
+        // height: 850,
     },
     imageWrapper: {
         borderColor: "#0a0a0a",
         borderWidth: 2,
-        width: 650,
-        height: 650,
+        width: 604,
+        height: 604,
     },
     buttonWrapper: {
         borderColor: "#0a0a0a",
