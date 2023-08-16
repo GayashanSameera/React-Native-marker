@@ -13,8 +13,10 @@
     "expo-splash-screen": "~0.20.5",
     "expo-status-bar": "~1.6.0",
     "lodash.clonedeep": "^4.5.0",
+    "moment": "^2.29.4",
     "react": "18.2.0",
     "react-native": "0.72.3",
+    "react-native-charts-wrapper": "^0.5.11",
     "react-native-draggable": "^3.3.0",
     "react-native-radial-gradient": "^1.1.3"
   },
